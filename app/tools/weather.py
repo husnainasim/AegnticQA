@@ -1,3 +1,5 @@
+import hashlib
+
 from app.tools.base import BaseTool
 from app.tools import register, _registry
 
@@ -21,7 +23,7 @@ class WeatherTool(BaseTool):
     }
 
     async def run(self, location: str, units: str = "celsius") -> dict:
-        seed = hash(location.lower()) & 0xFFFFFFFF
+        seed = int(hashlib.md5(location.lower().encode()).hexdigest(), 16) & 0xFFFFFFFF
         temperature = (seed % 30) + 5
         condition = _CONDITIONS[seed % len(_CONDITIONS)]
         humidity = (seed % 60) + 30
