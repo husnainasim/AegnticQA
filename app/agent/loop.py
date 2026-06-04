@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass, field
 
 from app.agent.planner import Planner
+from app.agent.policy import PolicyEngine
 from app.models.request import QueryRequest
 from app.models.response import QAResponse, LatencyBreakdown, Source, TokenUsage
 from app.tools import all_schemas, dispatch
@@ -42,6 +43,7 @@ class QAService:
         self.planner = planner or Planner()
 
     async def run(self, request: QueryRequest) -> QAResponse:
+        PolicyEngine.check_query(request.query)
         loop_start = time.perf_counter_ns()
         state = AgentState()
         state.messages.append({"role": "user", "content": request.query})
