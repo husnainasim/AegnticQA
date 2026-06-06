@@ -39,7 +39,7 @@ app.add_middleware(
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "model": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")}
+    return {"status": "ok", "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")}
 
 
 @app.post("/query")
