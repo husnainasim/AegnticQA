@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fustat:wght@700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* HIGH-FIDELITY CUSTOM CSS LAYOUTS & REVOLVING MARQUEE MOTIONS */
@@ -61,9 +62,6 @@
     animation: fadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }
-
-/* Ensure Fustat display headings fallback gracefully if fetched */
-@import url('https://fonts.googleapis.com/css2?family=Fustat:wght@700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
