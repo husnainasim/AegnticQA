@@ -1,10 +1,13 @@
 import json
+import logging
 import os
 from dataclasses import dataclass
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, BadRequestError
 
 from app.models.response import TokenUsage
+
+logger = logging.getLogger("agentic_qa")
 
 
 @dataclass
@@ -42,13 +45,24 @@ class Planner:
     ) -> PlannerResponse:
         full_messages = [{"role": "system", "content": system}] + messages
 
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            max_tokens=self.max_tokens,
-            tools=tools,
-            tool_choice="auto",
-            messages=full_messages,
-        )
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                tools=tools,
+                tool_choice="auto",
+                messages=full_messages,
+            )
+        except BadRequestError as exc:
+            # Groq occasionally generates malformed tool calls (e.g. tool name
+            # containing embedded JSON). Retry once without tools so the model
+            # can still produce a plain-text answer instead of a 500.
+            logger.warning("Groq BadRequestError on tool call, retrying without tools: %s", exc)
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                messages=full_messages,
+            )
 
         message = response.choices[0].message
         finish_reason = response.choices[0].finish_reason
@@ -56,11 +70,15 @@ class Planner:
         tool_calls = []
         if message.tool_calls:
             for tc in message.tool_calls:
+                try:
+                    inputs = json.loads(tc.function.arguments)
+                except json.JSONDecodeError:
+                    inputs = {}
                 tool_calls.append(
                     ToolCallRequest(
                         id=tc.id,
                         name=tc.function.name,
-                        inputs=json.loads(tc.function.arguments),
+                        inputs=inputs,
                     )
                 )
 

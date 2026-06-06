@@ -33,6 +33,16 @@ class AgentState:
     iteration: int = 0
 
 
+_MAX_HISTORY_MESSAGES = 20  # keep last N messages to avoid context overflow
+
+
+def _trim_history(messages: list[dict]) -> list[dict]:
+    """Keep the first user message + the most recent N-1 messages."""
+    if len(messages) <= _MAX_HISTORY_MESSAGES:
+        return messages
+    return [messages[0]] + messages[-(_MAX_HISTORY_MESSAGES - 1):]
+
+
 def _log(event: str, **kwargs):
     record = {"event": event, "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), **kwargs}
     logger.info(json.dumps(record))
@@ -53,7 +63,7 @@ class QAService:
 
         while state.iteration < request.max_iterations:
             llm_start = time.perf_counter_ns()
-            planner_resp = await self.planner.think(state.messages, tools, _SYSTEM_PROMPT)
+            planner_resp = await self.planner.think(_trim_history(state.messages), tools, _SYSTEM_PROMPT)
             llm_ms = max(1, (time.perf_counter_ns() - llm_start) // 1_000_000)
             step_key = f"llm_call_{state.iteration + 1}"
             state.step_latencies[step_key] = llm_ms
@@ -92,8 +102,11 @@ class QAService:
                         for r in result["results"]:
                             url = r.get("url", "")
                             text = r.get("text", "")
-                            if url and text:
-                                state.sources.append(Source(name=text[:80], url=url))
+                            if url and text and url.startswith("http"):
+                                try:
+                                    state.sources.append(Source(name=text[:80], url=url))
+                                except Exception:
+                                    pass
 
                     state.reasoning_trace.append(
                         f"Iteration {state.iteration}: called {tc.name}({json.dumps(tc.inputs)}) -> {json.dumps(result)[:200]}"
