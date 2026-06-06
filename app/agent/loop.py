@@ -68,7 +68,7 @@ class QAService:
                 tokens={"prompt": planner_resp.usage.prompt, "completion": planner_resp.usage.completion},
             )
 
-            state.messages.append({"role": "assistant", "content": planner_resp.content})
+            state.messages.append(planner_resp.content[0])
             state.iteration += 1
 
             if planner_resp.stop_reason == "end_turn":
@@ -76,7 +76,6 @@ class QAService:
                     answer = planner_resp.text_response
                 break
 
-            tool_results_content = []
             for tc in planner_resp.tool_calls:
                 _log("tool_call_start", tool=tc.name, inputs=tc.inputs, iteration=state.iteration)
                 retrieve_start = time.perf_counter_ns()
@@ -100,9 +99,9 @@ class QAService:
                         f"Iteration {state.iteration}: called {tc.name}({json.dumps(tc.inputs)}) -> {json.dumps(result)[:200]}"
                     )
 
-                    tool_results_content.append({
-                        "type": "tool_result",
-                        "tool_use_id": tc.id,
+                    state.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc.id,
                         "content": json.dumps(result),
                     })
 
@@ -112,14 +111,11 @@ class QAService:
                     state.reasoning_trace.append(
                         f"Iteration {state.iteration}: {tc.name} failed - {exc}"
                     )
-                    tool_results_content.append({
-                        "type": "tool_result",
-                        "tool_use_id": tc.id,
-                        "is_error": True,
+                    state.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc.id,
                         "content": f"Tool failed: {exc}",
                     })
-
-            state.messages.append({"role": "user", "content": tool_results_content})
         else:
             _log("max_iterations_reached", query=request.query)
 
