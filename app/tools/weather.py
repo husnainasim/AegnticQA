@@ -98,10 +98,18 @@ class WeatherTool(BaseTool):
     }
 
     async def run(self, location: str, units: str = "celsius") -> dict:
+        from app.cache.redis_client import cache_get, cache_set, make_key
+        cache_key = make_key("weather", location, units)
+        cached = await cache_get(cache_key)
+        if cached is not None:
+            return cached
+
         result = await _fetch_owm(location, units)
-        if result is not None:
-            return result
-        return _mock_weather(location, units)
+        if result is None:
+            result = _mock_weather(location, units)
+
+        await cache_set(cache_key, result, ttl=300)
+        return result
 
 
 if "get_weather" not in _registry:

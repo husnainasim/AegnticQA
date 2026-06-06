@@ -25,3 +25,8 @@ class QAResponse(BaseModel):
     latency_ms: LatencyBreakdown
     tokens: TokenUsage
     reasoning_trace: list[str] = []
+    request_id: str = ""
+    cost_usd: float = 0.0
+    memories_used: list[str] = []
+    session_id: str | None = None
+    eval: dict | None = None

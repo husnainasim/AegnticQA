@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir -e .
 
 COPY app/ ./app/
 
-ENV ANTHROPIC_MODEL=claude-sonnet-4-6
+ENV GROQ_MODEL=llama-3.3-70b-versatile
 ENV MAX_CONCURRENT_REQUESTS=5
 ENV PORT=8000
 

@@ -19,7 +19,7 @@ export default function App() {
         </div>
         <div>
           <h1 className="font-semibold text-gray-900 text-sm">Agentic QA</h1>
-          <p className="text-xs text-gray-500">Powered by Claude + DuckDuckGo + Weather</p>
+          <p className="text-xs text-gray-500">Powered by Groq (llama-3.3-70b) · DuckDuckGo · OpenWeatherMap</p>
         </div>
       </header>
 

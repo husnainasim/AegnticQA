@@ -32,3 +32,9 @@ class PolicyEngine:
             return hostname not in PolicyEngine._blocked_domains()
         except Exception:
             return False
+
+    @staticmethod
+    def check_injection(query: str) -> None:
+        from app.agent.guardrails import is_injection_attempt
+        if is_injection_attempt(query):
+            raise PolicyViolation("Prompt injection attempt detected")

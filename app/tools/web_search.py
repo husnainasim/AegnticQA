@@ -80,6 +80,12 @@ class WebSearchTool(BaseTool):
     async def run(self, query: str, max_results: int = 5) -> dict:
         PolicyEngine.check_query(query)
 
+        from app.cache.redis_client import cache_get, cache_set, make_key
+        cache_key = make_key("ddg", query, str(max_results))
+        cached = await cache_get(cache_key)
+        if cached is not None:
+            return cached
+
         async with _get_semaphore():
             data = await _fetch_ddg(query)
 
@@ -98,7 +104,9 @@ class WebSearchTool(BaseTool):
             topics = data.get("RelatedTopics", [])
             results.extend(_parse_topics(topics, max_results - len(results)))
 
-        return {"query": query, "results": results[:max_results]}
+        result = {"query": query, "results": results[:max_results]}
+        await cache_set(cache_key, result, ttl=600)
+        return result
 
 
 if "web_search" not in _registry:
