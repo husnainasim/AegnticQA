@@ -65,14 +65,20 @@ async def test_max_iterations_stops_loop():
     planner = MagicMock()
 
     async def always_tool_use(messages, tools, system):
-        block = MagicMock()
-        block.type = "tool_use"
-        block.id = "tu_loop"
-        block.name = "get_weather"
-        block.input = {"location": "Paris"}
+        assistant_msg = {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "id": "tu_loop",
+                    "type": "function",
+                    "function": {"name": "get_weather", "arguments": '{"location": "Paris"}'},
+                }
+            ],
+        }
         return PlannerResponse(
             stop_reason="tool_use",
-            content=[block],
+            content=[assistant_msg],
             tool_calls=[ToolCallRequest(id="tu_loop", name="get_weather", inputs={"location": "Paris"})],
             text_response=None,
             usage=TokenUsage(prompt=100, completion=10),
