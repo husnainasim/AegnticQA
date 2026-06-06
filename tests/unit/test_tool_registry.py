@@ -36,9 +36,10 @@ def test_all_schemas_format():
     schemas = all_schemas()
     assert len(schemas) == 1
     s = schemas[0]
-    assert s["name"] == "echo"
-    assert "input_schema" in s
-    assert s["description"] == "Echoes the input"
+    assert s["type"] == "function"
+    assert s["function"]["name"] == "echo"
+    assert "parameters" in s["function"]
+    assert s["function"]["description"] == "Echoes the input"
 
 
 async def test_dispatch_calls_run():

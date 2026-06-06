@@ -10,9 +10,12 @@ class BaseTool(ABC):
     async def run(self, **kwargs) -> dict:
         ...
 
-    def to_anthropic_schema(self) -> dict:
+    def to_openai_schema(self) -> dict:
         return {
-            "name": self.name,
-            "description": self.description,
-            "input_schema": self.input_schema,
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.input_schema,
+            },
         }

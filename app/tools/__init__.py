@@ -14,7 +14,7 @@ def get(name: str) -> BaseTool:
 
 
 def all_schemas() -> list[dict]:
-    return [t.to_anthropic_schema() for t in _registry.values()]
+    return [t.to_openai_schema() for t in _registry.values()]
 
 
 async def dispatch(name: str, inputs: dict) -> dict:
