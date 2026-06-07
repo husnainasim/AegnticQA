@@ -3,11 +3,23 @@ import logging
 import os
 from dataclasses import dataclass
 
+import httpx
 from openai import AsyncOpenAI, BadRequestError
 
 from app.models.response import TokenUsage
 
 logger = logging.getLogger("agentic_qa")
+
+# Shared HTTP client with keep-alive connection pooling — avoids TCP/TLS
+# renegotiation on every request (saves 200-500ms per call).
+_http_client = httpx.AsyncClient(
+    limits=httpx.Limits(
+        max_connections=20,
+        max_keepalive_connections=10,
+        keepalive_expiry=60.0,
+    ),
+    timeout=httpx.Timeout(connect=5.0, read=60.0, write=10.0, pool=5.0),
+)
 
 
 @dataclass
@@ -38,6 +50,7 @@ class Planner:
         self.client = client or AsyncOpenAI(
             api_key=os.getenv("GROQ_API_KEY"),
             base_url="https://api.groq.com/openai/v1",
+            http_client=_http_client,
         )
 
     async def think(

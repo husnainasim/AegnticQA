@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 import uuid
 from contextlib import asynccontextmanager
 
@@ -12,6 +13,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger("agentic_qa")
 
 import app.tools.weather  # noqa: F401
 import app.tools.web_search  # noqa: F401
@@ -29,11 +31,24 @@ async def lifespan(app: FastAPI):
     init_db()
     await create_tables()
 
-    app.state.qa_service = QAService(planner=Planner())
+    planner = Planner()
+    app.state.qa_service = QAService(planner=planner)
 
     # OpenTelemetry
     from app.observability.tracer import setup_otel
     setup_otel(app)
+
+    # Warmup: prime the Groq HTTP connection so first real request is fast
+    try:
+        t0 = time.perf_counter()
+        await planner.client.chat.completions.create(
+            model=planner.model,
+            messages=[{"role": "user", "content": "hi"}],
+            max_tokens=1,
+        )
+        logger.info("Groq warmup done in %.0fms", (time.perf_counter() - t0) * 1000)
+    except Exception as exc:
+        logger.warning("Groq warmup failed (non-fatal): %s", exc)
 
     yield
 
@@ -46,7 +61,7 @@ app = FastAPI(title="Agentic QA Service", version="0.2.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:4000", "http://localhost:4001"],
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Request-ID", "X-Session-ID"],
