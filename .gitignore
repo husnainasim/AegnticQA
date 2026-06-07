@@ -10,3 +10,5 @@ build/
 .pytest_cache/
 node_modules/
 frontend/dist/
+# Original sample repo — not part of submission
+AGENTICQA/

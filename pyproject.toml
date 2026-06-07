@@ -27,6 +27,8 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.45b0",
     # Memory embeddings (optional — graceful fallback if absent)
     "sentence-transformers>=3.0",
+    # Web search fallback for news/current events queries
+    "ddgs>=9.0",
 ]
 
 [project.optional-dependencies]

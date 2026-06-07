@@ -18,13 +18,15 @@ _PII_PATTERNS: dict[str, re.Pattern] = {
 # Prompt injection patterns
 # ---------------------------------------------------------------------------
 _INJECTION_PATTERNS: list[re.Pattern] = [
-    re.compile(r'ignore\s+(previous|all|above|prior|the\s+previous)\s+instructions?', re.I),
+    re.compile(r'ignore\s+\w[\w\s]{0,30}\s+instructions?', re.I),
     re.compile(r'you\s+are\s+now\s+(a|an|the)\b', re.I),
     re.compile(r'\b(system|assistant)\s*:\s', re.I),
     re.compile(r'<\|im_start\|>|<\|im_end\|>|\[INST\]|\[/INST\]', re.I),
     re.compile(r'\bjailbreak\b|\bDAN\s+mode\b|\bdeveloper\s+mode\b', re.I),
     re.compile(r'disregard\s+(all|previous|prior)\s+(instructions?|rules?|guidelines?)', re.I),
     re.compile(r'act\s+as\s+(if\s+you\s+are|a)\s+\w', re.I),
+    re.compile(r'reveal\s+(your\s+)?(system\s+prompt|instructions|prompt)', re.I),
+    re.compile(r'(show|print|tell\s+me)\s+(your\s+)?(system\s+prompt|hidden\s+instructions)', re.I),
 ]
 
 

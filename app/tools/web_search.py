@@ -35,6 +35,26 @@ async def _fetch_ddg(query: str) -> dict:
         return resp.json()
 
 
+async def _fetch_ddg_text(query: str, max_results: int) -> list[dict]:
+    """Fallback: use duckduckgo_search library for news/current-events queries."""
+    try:
+        from ddgs import DDGS
+        loop = asyncio.get_event_loop()
+
+        def _sync():
+            with DDGS() as ddgs:
+                return list(ddgs.text(query, max_results=max_results))
+
+        hits = await loop.run_in_executor(None, _sync)
+        return [
+            {"text": h.get("body", ""), "url": h.get("href", "")}
+            for h in hits
+            if h.get("body") and h.get("href", "").startswith("http")
+        ]
+    except Exception:
+        return []
+
+
 def _parse_topics(topics: list, max_results: int) -> list[dict]:
     results = []
     for topic in topics:
@@ -103,6 +123,11 @@ class WebSearchTool(BaseTool):
         if len(results) < max_results:
             topics = data.get("RelatedTopics", [])
             results.extend(_parse_topics(topics, max_results - len(results)))
+
+        # DDG instant-answer API returns nothing for news/current-events queries.
+        # Fall back to full-text search via duckduckgo_search library.
+        if not results:
+            results = await _fetch_ddg_text(query, max_results)
 
         result = {"query": query, "results": results[:max_results]}
         await cache_set(cache_key, result, ttl=600)

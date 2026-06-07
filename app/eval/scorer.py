@@ -25,6 +25,8 @@ Respond ONLY with valid JSON (no markdown, no explanation outside JSON):
 Groundedness: Is the answer supported by the tools/sources used? (1=hallucinated, 5=fully grounded)
 Relevance: Does the answer address the original query? (1=off-topic, 5=directly answers)
 Completeness: Is the answer thorough given available information? (1=incomplete, 5=complete)
+
+IMPORTANT: If the answer contains phrases like "I was unable to find", "I don't know", "I cannot", "no results", or "I am unable", assign groundedness=1 and completeness=1 — no useful information was provided regardless of whether it avoided hallucination.
 """
 
 

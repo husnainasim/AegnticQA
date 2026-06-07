@@ -38,7 +38,18 @@ async def lifespan(app: FastAPI):
     from app.observability.tracer import setup_otel
     setup_otel(app)
 
-    # Warmup: prime the Groq HTTP connection so first real request is fast
+    # Warmup ①: load SentenceTransformer weights into memory now, not on first query
+    try:
+        import asyncio as _asyncio
+        t0 = time.perf_counter()
+        await _asyncio.get_event_loop().run_in_executor(
+            None, lambda: __import__('app.memory.embedder', fromlist=['embedder']).embedder()
+        )
+        logger.info("Embedder warmup done in %.0fms", (time.perf_counter() - t0) * 1000)
+    except Exception as exc:
+        logger.warning("Embedder warmup failed (non-fatal): %s", exc)
+
+    # Warmup ②: prime the Groq HTTP connection so first real request is fast
     try:
         t0 = time.perf_counter()
         await planner.client.chat.completions.create(
