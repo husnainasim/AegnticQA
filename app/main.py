@@ -126,8 +126,8 @@ async def list_memories(session_id: str):
         from app.memory.store import get_store
         items = await get_store().list_all(session_id)
         return {"session_id": session_id, "memories": [
-            {"id": m.id, "content": m.content, "type": m.memory_type,
-             "importance": m.importance, "created_at": m.created_at}
+            {"id": str(m.id), "content": m.content, "type": m.memory_type,
+             "importance": m.importance, "created_at": str(m.created_at)}
             for m in items
         ]}
     except Exception:

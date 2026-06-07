@@ -95,10 +95,11 @@ export function AppPage() {
     if (!session?.sessionId) return;
     setMemories([]);
     fetch(`/memory/${encodeURIComponent(session.sessionId)}`)
-      .then(r => r.ok ? r.json() : { memories: [] })
+      .then(r => r.json().catch(() => ({ memories: [] })))
       .then(data => {
-        if (data.memories?.length > 0) {
-          setMemories(data.memories.map((m: { id: string; content: string; type: 'episodic' | 'semantic' | 'preference'; created_at: string }) => ({
+        const mems = data.memories || [];
+        if (mems.length > 0) {
+          setMemories(mems.map((m: { id: string; content: string; type: 'episodic' | 'semantic' | 'preference'; created_at: string }) => ({
             id: m.id, content: m.content, type: m.type, timestamp: m.created_at,
           })));
         }
