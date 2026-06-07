@@ -243,15 +243,22 @@ export function SessionIntelligence({
               </div>
             ) : (
               <div className="space-y-4 animate-fade-in" id="evaluation-score-details">
-                {/* LLM-as-judge Score summary layout */}
-                <div className="bg-[#121212] border border-[#222] p-3 rounded-xl flex items-center gap-3">
-                  <ShieldCheck size={28} className="text-green-400 flex-shrink-0 select-none animate-pulse" />
-                  <div className="leading-tight">
-                    <span className="text-[10px] text-[#666] font-mono select-none block uppercase">Verdict Label</span>
-                    <span className="text-xs font-bold font-sans text-white">HIGHLY GROUNDED RESPONSE</span>
-                    <span className="block text-[9px] text-[#777] font-mono">confidence scale: 98% (Groq judge metrics)</span>
-                  </div>
-                </div>
+                {/* LLM-as-judge Score summary layout — computed from real scores */}
+                {(() => {
+                  const avg = Math.round((lastEval.groundedness + lastEval.relevance + lastEval.completeness) / 3);
+                  const verdict = avg >= 80 ? 'HIGHLY GROUNDED' : avg >= 60 ? 'MODERATELY GROUNDED' : avg >= 40 ? 'PARTIALLY GROUNDED' : 'LOW CONFIDENCE';
+                  const color = avg >= 80 ? 'text-green-400' : avg >= 60 ? 'text-yellow-400' : avg >= 40 ? 'text-orange-400' : 'text-red-400';
+                  return (
+                    <div className="bg-[#121212] border border-[#222] p-3 rounded-xl flex items-center gap-3">
+                      <ShieldCheck size={28} className={`${color} flex-shrink-0 select-none`} />
+                      <div className="leading-tight">
+                        <span className="text-[10px] text-[#666] font-mono select-none block uppercase">Verdict Label</span>
+                        <span className={`text-xs font-bold font-sans ${color}`}>{verdict} RESPONSE</span>
+                        <span className="block text-[9px] text-[#777] font-mono">avg score: {avg}/100 · Groq judge</span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="space-y-3 pt-2" id="evaluation-score-graphs">
                   {/* Score 1: Groundedness */}
