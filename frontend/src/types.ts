@@ -22,7 +22,7 @@ export interface Source {
 }
 
 export interface MessageMetadata {
-  cost: number; // in USD
+  cost: number;
   tokens: {
     prompt: number;
     completion: number;
@@ -34,7 +34,7 @@ export interface MessageMetadata {
 
 export interface EvalScores {
   groundedness: number; // 0-100
-  relevance: number; // 0-100
+  relevance: number;    // 0-100
   completeness: number; // 0-100
 }
 
@@ -52,13 +52,14 @@ export interface Message {
 
 export interface Session {
   id: string;
-  sessionId: string; // backend session UUID for multi-turn context
+  sessionId: string;
   title: string;
   timestamp: string;
   messages: Message[];
 }
 
-export type MemoryType = 'episodic' | 'semantic' | 'preference';
+export const MEMORY_TYPES = ['episodic', 'semantic', 'preference'] as const;
+export type MemoryType = typeof MEMORY_TYPES[number];
 
 export interface Memory {
   id: string;
@@ -71,8 +72,8 @@ export interface TraceSpan {
   id: string;
   name: string;
   type: 'llm' | 'tool' | 'agent';
-  startTime: number; // timestamp ms
-  endTime: number; // timestamp ms
+  startTime: number;
+  endTime: number;
   latencyMs: number;
   status: 'success' | 'error';
   input: string;

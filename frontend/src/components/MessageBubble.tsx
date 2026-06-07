@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Message } from '../types';
+import type { Message } from '../types';
 import { ReasoningTrace } from './ReasoningTrace';
 import { SourcesList } from './SourcesList';
 import { StatsBar } from './StatsBar';

@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useStreamingQuery, deleteMemoryById } from '../hooks/useStreamingQuery';
-import { Message, Session, Memory } from '../types';
+import type { Message, Session, Memory } from '../types';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatInput } from '../components/ChatInput';
 import { SessionIntelligence } from '../components/SessionIntelligence';

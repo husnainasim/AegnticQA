@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Memory, TraceSummary, EvalScores } from '../types';
+import type { Memory, TraceSummary, EvalScores } from '../types';
 import { Trash2, BrainCircuit, Activity, PieChart, ShieldCheck, Database, Calendar, HelpCircle } from 'lucide-react';
 
 interface SessionIntelligenceProps {

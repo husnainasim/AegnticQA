@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Message, ReasoningStep, Source, Session, Memory, TraceSummary, TraceSpan, EvalScores } from '../types';
+import type { Message, ReasoningStep, Source, Session, Memory, TraceSummary, TraceSpan, EvalScores } from '../types';
 
 // ── Backend response shapes ───────────────────────────────────────────────────
 

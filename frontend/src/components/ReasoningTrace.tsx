@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { ReasoningStep } from '../types';
+import type { ReasoningStep } from '../types';
 import { Terminal, ChevronDown, ChevronUp, Cpu, Flame } from 'lucide-react';
 
 interface ReasoningTraceProps {

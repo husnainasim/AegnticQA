@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { MessageMetadata } from '../types';
+import type { MessageMetadata } from '../types';
 import { Cpu, DollarSign, Timer, Hash } from 'lucide-react';
 
 interface StatsBarProps {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Source } from '../types';
+import type { Source } from '../types';
 import { ExternalLink, Layers } from 'lucide-react';
 
 interface SourcesListProps {
