@@ -42,46 +42,69 @@ export function AppPage() {
   // Hook activation
   const { isStreaming, startStream, activeTrace, setActiveTrace } = useStreamingQuery();
 
-  // Initialize with authentic, comprehensive mock dataset
+  const STORAGE_KEY = 'agenticqa_sessions';
+  const ACTIVE_KEY = 'agenticqa_active_session';
+
+  // Load sessions from localStorage on mount, or create a fresh one
   useEffect(() => {
-    // Default initial mock memories
-    const initialMemories: Memory[] = [
-      {
-        id: 'mem_1',
-        content: 'Hiring panel reviewing execution speed benchmarks and code quality standards.',
-        type: 'episodic',
-        timestamp: new Date(Date.now() - 7200000).toISOString()
-      },
-      {
-        id: 'mem_2',
-        content: 'Preferred LLM node designated: Groq llama-3.3-70b-versatile with Langfuse trace intercept.',
-        type: 'preference',
-        timestamp: new Date(Date.now() - 3600000).toISOString()
-      },
-      {
-        id: 'mem_3',
-        content: 'Active Redis cache enabled with custom 180s Time-To-Live limits.',
-        type: 'semantic',
-        timestamp: new Date(Date.now() - 1800000).toISOString()
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const savedActive = localStorage.getItem(ACTIVE_KEY);
+      if (saved) {
+        const parsed: Session[] = JSON.parse(saved);
+        if (parsed.length > 0) {
+          setSessions(parsed);
+          setActiveSessionId(savedActive && parsed.find(s => s.id === savedActive) ? savedActive : parsed[0].id);
+          return;
+        }
       }
-    ];
-    setMemories(initialMemories);
+    } catch { /* ignore parse errors */ }
 
-    // Start with a single clean session backed by a real backend session UUID
-    const initialSessionId = 'session_' + Math.random().toString(36).substring(2, 8);
-    const defaultSessions: Session[] = [
-      {
-        id: initialSessionId,
-        sessionId: crypto.randomUUID(),
-        title: 'New Investigation',
-        timestamp: new Date().toISOString(),
-        messages: [],
-      },
-    ];
-
-    setSessions(defaultSessions);
-    setActiveSessionId(initialSessionId);
+    // No saved sessions — create fresh one
+    const initialId = 'session_' + Math.random().toString(36).substring(2, 8);
+    const fresh: Session[] = [{
+      id: initialId,
+      sessionId: crypto.randomUUID(),
+      title: 'New Investigation',
+      timestamp: new Date().toISOString(),
+      messages: [],
+    }];
+    setSessions(fresh);
+    setActiveSessionId(initialId);
   }, []);
+
+  // Persist sessions to localStorage whenever they change
+  useEffect(() => {
+    if (sessions.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      } catch { /* storage full — ignore */ }
+    }
+  }, [sessions]);
+
+  // Persist active session ID
+  useEffect(() => {
+    if (activeSessionId) {
+      localStorage.setItem(ACTIVE_KEY, activeSessionId);
+    }
+  }, [activeSessionId]);
+
+  // Load real memories from backend when active session changes
+  useEffect(() => {
+    const session = sessions.find(s => s.id === activeSessionId);
+    if (!session?.sessionId) return;
+    setMemories([]);
+    fetch(`/memory/${encodeURIComponent(session.sessionId)}`)
+      .then(r => r.ok ? r.json() : { memories: [] })
+      .then(data => {
+        if (data.memories?.length > 0) {
+          setMemories(data.memories.map((m: { id: string; content: string; type: 'episodic' | 'semantic' | 'preference'; created_at: string }) => ({
+            id: m.id, content: m.content, type: m.type, timestamp: m.created_at,
+          })));
+        }
+      })
+      .catch(() => {});
+  }, [activeSessionId]);
 
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0];
 
@@ -94,12 +117,21 @@ export function AppPage() {
   const handleQuerySubmit = async (queryText: string) => {
     if (!activeSessionId || !activeSession || isStreaming) return;
 
-    // Reset current active trace to clear stale view frames before running next query
     setActiveTrace(null);
+
+    // Auto-title session from first user message
+    const isFirstMessage = activeSession.messages.length === 0;
+    const sessionToUse = isFirstMessage
+      ? { ...activeSession, title: queryText.length > 40 ? queryText.slice(0, 40) + '…' : queryText }
+      : activeSession;
+
+    if (isFirstMessage) {
+      setSessions(prev => prev.map(s => s.id === activeSessionId ? sessionToUse : s));
+    }
 
     await startStream(
       queryText,
-      activeSession,
+      sessionToUse,
       (updatedSession) => {
         setSessions((prev) =>
           prev.map((s) => (s.id === updatedSession.id ? updatedSession : s))
